@@ -1,0 +1,31 @@
+# Ignore node_modules
+node_modules
+**/node_modules
+
+# Ignore logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignore documentation and other non-essential files
+README.md
+DOCUMENTATION.md
+SUBMISSION_GUIDE.md
+QUICK_REFERENCE.md
+CHECKLIST.md
+SUMMARY.md
+IDEA.txt
+*.iml
+.idea
+.vscode
+
+# Ignore build artifacts from local development
+packages/sentinel-dashboard/build
+packages/sentinel-agent/dist
+packages/sentinel-backend/dist
+
+# Ignore git files
+.git
+.gitignore

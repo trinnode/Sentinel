@@ -1,0 +1,34 @@
+{
+  "name": "sentinel-monorepo",
+  "version": "1.0.0",
+  "description": "Decentralized blockchain validator monitoring system",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "install:all": "npm install",
+    "build:all": "npm run build --workspaces",
+    "start:backend": "npm run start --workspace=sentinel-backend",
+    "start:dashboard": "npm run start --workspace=sentinel-dashboard",
+    "start:agent": "npm run start --workspace=sentinel-agent",
+    "dev:backend": "npm run dev --workspace=sentinel-backend",
+    "dev:dashboard": "npm run dev --workspace=sentinel-dashboard",
+    "test:all": "npm run test --workspaces",
+    "clean": "npm run clean --workspaces"
+  },
+  "keywords": [
+    "blockchain",
+    "validator",
+    "monitoring",
+    "sentinel",
+    "p2p",
+    "consensus"
+  ],
+  "author": "Sentinel Team",
+  "license": "MIT",
+  "overrides": {
+    "ajv": "8.17.1",
+    "ajv-keywords": "5.1.0"
+  }
+}

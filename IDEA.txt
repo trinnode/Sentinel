@@ -1,0 +1,187 @@
+Sentinel: Technical Architecture & MVP Guide (React Edition)
+
+Version: 1.1
+Date: October 17, 2025
+Status: NodeOps Proof-of-Build Hackathon Blueprint
+
+1. Project Overview
+
+1.1. Project Name
+
+Sentinel
+
+1.2. Elevator Pitch
+
+Sentinel is a decentralized, proactive monitoring and failover system for blockchain validators. It moves beyond simple reactive alerts, using a network of peer-to-peer agents to achieve consensus on potential failures, predict issues, and trigger automated actions to prevent catastrophic slashing events before they happen.
+
+1.3. Problem Statement
+
+For validator operators, slashing is the single greatest operational risk. Downtime or misconfigurations can lead to significant financial losses. Existing monitoring tools are reactive; they trigger alerts after a node has already gone offline, by which point it may be too late to avoid penalties.
+
+1.4. The Solution
+
+Sentinel deploys lightweight, decentralized "sentinel agents" that perform high-frequency health checks on a validator node. To eliminate false positives, these agents communicate with each other to confirm if a downtime event is localized or a genuine node failure. When consensus is reached on a failure, Sentinel can trigger a pre-configured set of actions, from advanced alerts to automated webhooks that can initiate a failover to a backup node.
+
+1.5. Hackathon Goal (MVP)
+
+The goal is to build a functional MVP demonstrating the end-to-end flow:
+
+A user onboards via a React web dashboard and configures a validator node to monitor.
+
+A downloadable TypeScript-based Sentinel Agent performs health checks.
+
+Multiple agents running locally can achieve consensus on a simulated node failure.
+
+The failure consensus triggers a real-time alert on the web dashboard and a webhook action.
+
+2. System Architecture
+
+The system consists of the off-chain Sentinel Agents, a central Backend API, and a React frontend Dashboard.
+
+2.1. High-Level Diagram
+
++-------------------------------------------------+
+|          Validator's Infrastructure             |
+|  +------------------+   +-------------------+   |
+|  | Ethereum Beacon  |   | Validator Client  |   |
+|  +------------------+   +-------------------+   |
++-----------^-----------------------^-----------+
+            | Health Checks (RPC/REST) |
++-----------v-----------------------v-----------+
+|          Off-Chain Sentinel Agents            |
+|                (TypeScript/Node.js)           |
+|-------------------------------------------------|
+| - High-Frequency Health Monitoring            |
+| - P2P Consensus Protocol (via WebSockets)     |
+| - Securely reports status to Sentinel API     |
++-----------^-----------------------^-----------+
+            | Status Updates (REST) | P2P Network
++-----------v-----------------------v-----------+
+|        Sentinel Backend API (Express.js)        |
+|-------------------------------------------------|
+| - User Authentication & Validator Management  |
+| - WebSocket server for real-time updates      |
+| - Rule Engine & Webhook Dispatcher            |
++-----------^-------------------------------------+
+            | Real-time Data (WebSockets) & API Calls
++-----------v-------------------------------------+
+|         Dashboard Frontend (React App)          |
+|-------------------------------------------------|
+| - Manages validator configurations            |
+| - Displays real-time status from API          |
++-------------------------------------------------+
+
+
+2.2. Technology Stack
+
+Layer
+
+Technology
+
+Justification
+
+Agent
+
+Node.js (TypeScript)
+
+Perfect for the hackathon's theme. Excellent for I/O-bound tasks and network communication.
+
+P2P Communication
+
+WebSockets (ws library)
+
+Simple and effective for real-time communication between agents for the consensus mechanism.
+
+Backend API
+
+Express.js (TypeScript)
+
+A robust and minimalist framework for building the central API to manage users, validators, and alerts.
+
+Dashboard Frontend
+
+React (Create React App)
+
+Your preferred library for building the user-facing dashboard to control the system.
+
+Real-time Comms
+
+Socket.IO or ws
+
+The Express API will host a WebSocket server to push live status updates to the React dashboard.
+
+Database
+
+PostgreSQL (with Prisma)
+
+A reliable database for storing user data, validator configurations, and alert history.
+
+UI Components
+
+Shadcn/UI, Tailwind CSS
+
+Modern UI toolkit for building a professional-looking dashboard quickly.
+
+3. Core User Flows & Functionality (MVP)
+
+3.1. Flow 1: Onboarding a Validator
+
+Sign Up & Login: User creates an account on the Sentinel React dashboard.
+
+Add Validator: User submits a form to add a validator, entering a name and the Beacon Node API endpoint. This calls the Express backend API.
+
+Generate Agent Key: The backend API generates a unique API key, saves it to the database, and returns it to the frontend.
+
+Download & Run Agent: The user is given the command to run the Sentinel agent, passing the API key. AGENT_API_KEY=... node agent.js
+
+3.2. Flow 2: Proactive Health Monitoring & Consensus
+
+Local Health Check: The user's Sentinel agent polls their Beacon Node's /eth/v1/node/health endpoint.
+
+Failure Detected: The health check fails.
+
+Request Consensus: The agent broadcasts a message to its P2P network to confirm the failure.
+
+Consensus Reached: If a quorum of peers confirms the failure, the agent marks it as "verified."
+
+3.3. Flow 3: Alerting and Automated Action
+
+Report to API: The agent sends a signed payload to a REST endpoint on the Express API: POST /api/report.
+
+Dashboard Update: The Express API broadcasts an update over WebSockets to the connected React dashboard, which updates the UI in real-time.
+
+Trigger Action: The API's rule engine finds a matching rule and dispatches a webhook to the user's pre-configured URL.
+
+4. Hackathon Roadmap & Priorities
+
+Priority 1: The Core Agent Logic
+
+[ ] Create the TypeScript Node.js project for the agent.
+
+[ ] Implement the health-checking logic for an Ethereum Beacon Node.
+
+[ ] Set up the WebSocket logic for P2P consensus.
+
+Priority 2: The Backend API
+
+[ ] Set up the Express.js project with TypeScript and Prisma.
+
+[ ] Build the API endpoints for user auth and validator CRUD.
+
+[ ] Create the /api/report endpoint for agents.
+
+[ ] Implement the WebSocket server for pushing updates and the webhook dispatcher.
+
+Priority 3: The React Dashboard
+
+[ ] Set up a Create React App project.
+
+[ ] Build the UI for login, registration, and validator management (forms and lists).
+
+[ ] Implement the client-side WebSocket logic to listen for and display real-time status updates.
+
+Priority 4: Polish & Demo Prep
+
+[ ] Connect all three components into a smooth end-to-end flow.
+
+[ ] Record a clear demo video showing a simulated node failure being caught and a webhook being triggered.

@@ -1,0 +1,6 @@
+[2025-10-18T17:08:59.059Z] INFO: Starting Sentinel Agent...
+[2025-10-18T17:08:59.369Z] INFO: Backend API connection test successful
+[2025-10-18T17:08:59.371Z] INFO: Starting beacon node monitor | Context: {"beaconNodeUrl":"http://localhost:5052","interval":30000}
+[2025-10-18T17:08:59.388Z] INFO: Sentinel Agent started successfully | Context: {"agentId":"sentinel-agent-1","backendUrl":"http://localhost:3001","beaconNodeUrl":"http://localhost:5052"}
+[2025-10-18T17:08:59.390Z] INFO: Sentinel Agent started successfully
+[2025-10-18T17:08:59.392Z] INFO: Press Ctrl+C to stop the agent

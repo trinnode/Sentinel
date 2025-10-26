@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: sentinel-postgres
+    environment:
+      POSTGRES_DB: sentinel_db
+      POSTGRES_USER: sentinel_user
+      POSTGRES_PASSWORD: sentinel_password
+    ports:
+      - "55432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentinel_user -d sentinel_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    container_name: sentinel-backend
+    environment:
+      - DATABASE_URL=postgresql://sentinel_user:sentinel_password@postgres:5432/sentinel_db?schema=public
+      - NODE_ENV=production
+      - PORT=3001
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+    ports:
+      - "3001:3001"
+      - "3002:3002" # WebSocket port
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  dashboard:
+    build: ../sentinel-dashboard
+    container_name: sentinel-dashboard
+    environment:
+      - REACT_APP_API_URL=http://localhost:3001
+      - REACT_APP_WS_URL=ws://localhost:3002
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  default:
+    name: sentinel-network

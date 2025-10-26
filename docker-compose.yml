@@ -1,0 +1,118 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: sentinel-postgres
+    environment:
+      POSTGRES_DB: sentinel_db
+      POSTGRES_USER: sentinel_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-sentinel_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentinel_user -d sentinel_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sentinel-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./packages/sentinel-backend
+      dockerfile: Dockerfile
+    container_name: sentinel-backend
+    environment:
+      DATABASE_URL: postgresql://sentinel_user:${DB_PASSWORD:-sentinel_password}@postgres:5432/sentinel_db
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_EXPIRES_IN: 7d
+      PORT: 3001
+      WS_PORT: 3002
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    ports:
+      - "3001:3001"
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3001/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - sentinel-network
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: ./packages/sentinel-dashboard
+      dockerfile: Dockerfile
+    container_name: sentinel-dashboard
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost/",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - sentinel-network
+    restart: unless-stopped
+
+  agent:
+    build:
+      context: ./packages/sentinel-agent
+      dockerfile: Dockerfile
+    container_name: sentinel-agent
+    environment:
+      AGENT_ID: ${AGENT_ID:-demo-agent-1}
+      AGENT_API_KEY: ${AGENT_API_KEY:-demo_api_key_1}
+      BACKEND_API_URL: http://backend:3001
+      BEACON_NODE_URL: ${BEACON_NODE_URL:-http://host.docker.internal:5052}
+      HEALTH_CHECK_INTERVAL: ${HEALTH_CHECK_INTERVAL:-30000}
+      CONSENSUS_THRESHOLD: ${CONSENSUS_THRESHOLD:-2}
+      P2P_PORT: 3003
+    ports:
+      - "3003:3003"
+    depends_on:
+      - backend
+    networks:
+      - sentinel-network
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    profiles:
+      - with-agent
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  sentinel-network:
+    driver: bridge

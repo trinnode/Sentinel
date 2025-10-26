@@ -1,0 +1,359 @@
+{
+    "version": "1.0",
+    "name": "Sentinel - Decentralized Validator Monitoring",
+    "description": "Production-ready blockchain validator monitoring with multi-agent consensus, real-time alerts, and automated failover webhooks. Eliminates false positives through distributed failure detection.",
+    "author": "Sentinel Team",
+    "license": "MIT",
+    "tags": [
+        "monitoring",
+        "validators",
+        "ethereum",
+        "consensus",
+        "failover",
+        "blockchain",
+        "p2p",
+        "real-time",
+        "alerts",
+        "webhooks"
+    ],
+    "category": "Infrastructure & Tooling",
+    "icon": "https://raw.githubusercontent.com/YOUR_USERNAME/sentinel/main/assets/sentinel-icon.png",
+    "screenshots": [
+        "https://raw.githubusercontent.com/YOUR_USERNAME/sentinel/main/assets/dashboard-screenshot.png",
+        "https://raw.githubusercontent.com/YOUR_USERNAME/sentinel/main/assets/validators-screenshot.png",
+        "https://raw.githubusercontent.com/YOUR_USERNAME/sentinel/main/assets/alerts-screenshot.png"
+    ],
+    "services": {
+        "postgres": {
+            "image": "postgres:15-alpine",
+            "container_name": "sentinel-postgres",
+            "environment": {
+                "POSTGRES_DB": "sentinel_db",
+                "POSTGRES_USER": "sentinel_user",
+                "POSTGRES_PASSWORD": "${DB_PASSWORD}"
+            },
+            "volumes": [
+                "postgres_data:/var/lib/postgresql/data"
+            ],
+            "ports": [
+                "5432:5432"
+            ],
+            "healthcheck": {
+                "test": [
+                    "CMD-SHELL",
+                    "pg_isready -U sentinel_user -d sentinel_db"
+                ],
+                "interval": "10s",
+                "timeout": "5s",
+                "retries": 5
+            },
+            "restart": "unless-stopped"
+        },
+        "backend": {
+            "image": "YOUR_DOCKERHUB_USERNAME/sentinel-backend:latest",
+            "container_name": "sentinel-backend",
+            "environment": {
+                "DATABASE_URL": "postgresql://sentinel_user:${DB_PASSWORD}@postgres:5432/sentinel_db",
+                "JWT_SECRET": "${JWT_SECRET}",
+                "JWT_EXPIRES_IN": "7d",
+                "PORT": "3001",
+                "WS_PORT": "3002",
+                "NODE_ENV": "production",
+                "LOG_LEVEL": "${LOG_LEVEL}"
+            },
+            "ports": [
+                "3001:3001",
+                "3002:3002"
+            ],
+            "depends_on": {
+                "postgres": {
+                    "condition": "service_healthy"
+                }
+            },
+            "healthcheck": {
+                "test": [
+                    "CMD",
+                    "wget",
+                    "--no-verbose",
+                    "--tries=1",
+                    "--spider",
+                    "http://localhost:3001/health"
+                ],
+                "interval": "30s",
+                "timeout": "10s",
+                "retries": 3,
+                "start_period": "40s"
+            },
+            "restart": "unless-stopped"
+        },
+        "dashboard": {
+            "image": "YOUR_DOCKERHUB_USERNAME/sentinel-dashboard:latest",
+            "container_name": "sentinel-dashboard",
+            "ports": [
+                "3000:80"
+            ],
+            "depends_on": [
+                "backend"
+            ],
+            "healthcheck": {
+                "test": [
+                    "CMD",
+                    "wget",
+                    "--no-verbose",
+                    "--tries=1",
+                    "--spider",
+                    "http://localhost/"
+                ],
+                "interval": "30s",
+                "timeout": "10s",
+                "retries": 3
+            },
+            "restart": "unless-stopped"
+        },
+        "agent": {
+            "image": "YOUR_DOCKERHUB_USERNAME/sentinel-agent:latest",
+            "container_name": "sentinel-agent",
+            "environment": {
+                "AGENT_ID": "${AGENT_ID}",
+                "AGENT_API_KEY": "${AGENT_API_KEY}",
+                "BACKEND_API_URL": "http://backend:3001",
+                "BEACON_NODE_URL": "${BEACON_NODE_URL}",
+                "HEALTH_CHECK_INTERVAL": "${HEALTH_CHECK_INTERVAL}",
+                "CONSENSUS_THRESHOLD": "${CONSENSUS_THRESHOLD}",
+                "P2P_PORT": "3003"
+            },
+            "ports": [
+                "3003:3003"
+            ],
+            "depends_on": [
+                "backend"
+            ],
+            "restart": "unless-stopped",
+            "extra_hosts": [
+                "host.docker.internal:host-gateway"
+            ],
+            "optional": true
+        }
+    },
+    "volumes": {
+        "postgres_data": {
+            "driver": "local"
+        }
+    },
+    "networks": {
+        "sentinel-network": {
+            "driver": "bridge"
+        }
+    },
+    "parameters": [
+        {
+            "name": "DB_PASSWORD",
+            "label": "Database Password",
+            "type": "password",
+            "required": true,
+            "default": "sentinel_password",
+            "description": "Password for PostgreSQL database. Use a strong password in production.",
+            "validation": {
+                "minLength": 8
+            }
+        },
+        {
+            "name": "JWT_SECRET",
+            "label": "JWT Secret Key",
+            "type": "password",
+            "required": true,
+            "description": "Secret key for JWT token generation. Must be at least 32 characters. Generate using: openssl rand -base64 32",
+            "validation": {
+                "minLength": 32
+            }
+        },
+        {
+            "name": "LOG_LEVEL",
+            "label": "Log Level",
+            "type": "select",
+            "required": false,
+            "default": "info",
+            "options": [
+                {
+                    "value": "debug",
+                    "label": "Debug (Verbose)"
+                },
+                {
+                    "value": "info",
+                    "label": "Info (Recommended)"
+                },
+                {
+                    "value": "warn",
+                    "label": "Warning"
+                },
+                {
+                    "value": "error",
+                    "label": "Error Only"
+                }
+            ],
+            "description": "Logging verbosity level for the backend"
+        },
+        {
+            "name": "BEACON_NODE_URL",
+            "label": "Beacon Node URL (Optional)",
+            "type": "string",
+            "required": false,
+            "default": "http://host.docker.internal:5052",
+            "description": "URL of your Ethereum beacon node to monitor. Use host.docker.internal to access services on the host machine. Leave default if you'll configure validators later via the dashboard.",
+            "placeholder": "http://localhost:5052"
+        },
+        {
+            "name": "AGENT_ID",
+            "label": "Agent ID (Optional)",
+            "type": "string",
+            "required": false,
+            "default": "demo-agent-1",
+            "description": "Unique identifier for the monitoring agent. Only needed if deploying the agent container. You can add more agents later."
+        },
+        {
+            "name": "AGENT_API_KEY",
+            "label": "Agent API Key (Optional)",
+            "type": "password",
+            "required": false,
+            "description": "API key for agent authentication. Generate this from the dashboard after creating a validator."
+        },
+        {
+            "name": "HEALTH_CHECK_INTERVAL",
+            "label": "Health Check Interval (ms)",
+            "type": "number",
+            "required": false,
+            "default": "30000",
+            "description": "How often the agent checks validator health (in milliseconds). Default: 30000 (30 seconds)",
+            "validation": {
+                "min": 10000,
+                "max": 300000
+            }
+        },
+        {
+            "name": "CONSENSUS_THRESHOLD",
+            "label": "Consensus Threshold",
+            "type": "number",
+            "required": false,
+            "default": "2",
+            "description": "Minimum number of agents that must agree before triggering an alert. Default: 2",
+            "validation": {
+                "min": 1,
+                "max": 10
+            }
+        }
+    ],
+    "quickStart": {
+        "steps": [
+            {
+                "title": "Deploy the Stack",
+                "description": "Click 'Deploy' to start all services. Initial deployment takes 2-3 minutes."
+            },
+            {
+                "title": "Access the Dashboard",
+                "description": "Open http://localhost:3000 in your browser. Create an account or use demo credentials: demo@sentinel.com / password123"
+            },
+            {
+                "title": "Add a Validator",
+                "description": "Navigate to the Validators page and click 'Add Validator'. Enter your beacon node URL and copy the generated API key."
+            },
+            {
+                "title": "Deploy Monitoring Agents",
+                "description": "Use the API key to deploy agents on different servers/locations. Agents achieve consensus to eliminate false positives."
+            },
+            {
+                "title": "Configure Webhooks",
+                "description": "Set up webhooks on the Webhooks page to receive alerts via Slack, Discord, or custom endpoints."
+            }
+        ]
+    },
+    "ports": [
+        {
+            "port": 3000,
+            "protocol": "http",
+            "description": "Dashboard Web UI"
+        },
+        {
+            "port": 3001,
+            "protocol": "http",
+            "description": "Backend REST API"
+        },
+        {
+            "port": 3002,
+            "protocol": "ws",
+            "description": "WebSocket Server (Real-time Updates)"
+        },
+        {
+            "port": 3003,
+            "protocol": "ws",
+            "description": "Agent P2P Network"
+        },
+        {
+            "port": 5432,
+            "protocol": "tcp",
+            "description": "PostgreSQL Database"
+        }
+    ],
+    "documentation": {
+        "readme": "https://github.com/YOUR_USERNAME/sentinel/blob/main/README.md",
+        "fullDocs": "https://github.com/YOUR_USERNAME/sentinel/blob/main/DOCUMENTATION.md",
+        "submissionGuide": "https://github.com/YOUR_USERNAME/sentinel/blob/main/SUBMISSION_GUIDE.md",
+        "video": "YOUR_YOUTUBE_VIDEO_URL",
+        "apiDocs": "http://localhost:3001/api-docs"
+    },
+    "support": {
+        "email": "your.email@example.com",
+        "github": "https://github.com/YOUR_USERNAME/sentinel",
+        "issues": "https://github.com/YOUR_USERNAME/sentinel/issues",
+        "discussions": "https://github.com/YOUR_USERNAME/sentinel/discussions"
+    },
+    "requirements": {
+        "cpu": "2 cores minimum (4 cores recommended)",
+        "memory": "2GB minimum (4GB recommended)",
+        "storage": "10GB minimum (20GB recommended)",
+        "network": "Outbound internet access required for agents"
+    },
+    "features": [
+        "Multi-agent consensus protocol eliminates false positives",
+        "Real-time dashboard with WebSocket updates",
+        "Production-ready Docker deployment",
+        "JWT authentication with bcrypt password hashing",
+        "Configurable webhook notifications",
+        "P2P agent network for distributed monitoring",
+        "PostgreSQL database with Prisma ORM",
+        "TypeScript for type safety across the stack",
+        "React dashboard with Tailwind CSS",
+        "Comprehensive logging and health checks"
+    ],
+    "useCases": [
+        {
+            "title": "Solo Stakers",
+            "description": "Monitor home validators with distributed agents to detect internet outages vs actual validator failures"
+        },
+        {
+            "title": "Staking Services",
+            "description": "Enterprise monitoring for client validators with automated failover and SLA tracking"
+        },
+        {
+            "title": "Validator DAOs",
+            "description": "Decentralized monitoring with transparent alert history and shared dashboard access"
+        },
+        {
+            "title": "Infrastructure Providers",
+            "description": "Integrate with existing monitoring stacks via REST API and webhooks"
+        }
+    ],
+    "changelog": [
+        {
+            "version": "1.0.0",
+            "date": "2025-01-22",
+            "changes": [
+                "Initial release for NodeOps Hackathon",
+                "Multi-agent consensus protocol",
+                "Real-time WebSocket dashboard",
+                "Webhook notifications",
+                "Docker Compose deployment",
+                "Complete documentation"
+            ]
+        }
+    ]
+}
