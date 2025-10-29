@@ -5,6 +5,17 @@
 [![React](https://img.shields.io/badge/React-18-blue.svg)](https://reactjs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)](https://postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://docker.com/)
+
+## 🌐 Live Demo
+
+> ⚠️ **Deploy your own instance**: See [RAILWAY_WEB_DEPLOY.md](./RAILWAY_WEB_DEPLOY.md) for a 5-minute deployment guide.
+
+Demo credentials:
+```
+Email: demo@sentinel.com
+Password: password123
+```
+
 [![Docker Hub](https://img.shields.io/badge/Docker%20Hub-trinnode-blue.svg)](https://hub.docker.com/u/trinnode)
 
 **Sentinel** is a sophisticated, enterprise-grade decentralized monitoring system designed specifically for blockchain validators. It moves beyond simple reactive alerts by implementing a peer-to-peer consensus mechanism to eliminate false positives and ensure reliable failure detection.
