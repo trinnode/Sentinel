@@ -50,7 +50,7 @@
             "restart": "unless-stopped"
         },
         "backend": {
-            "image": "YOUR_DOCKERHUB_USERNAME/sentinel-backend:latest",
+            "image": "trinnode/sentinel-backend:latest",
             "container_name": "sentinel-backend",
             "environment": {
                 "DATABASE_URL": "postgresql://sentinel_user:${DB_PASSWORD}@postgres:5432/sentinel_db",
@@ -87,7 +87,7 @@
             "restart": "unless-stopped"
         },
         "dashboard": {
-            "image": "YOUR_DOCKERHUB_USERNAME/sentinel-dashboard:latest",
+            "image": "trinnode/sentinel-dashboard:latest",
             "container_name": "sentinel-dashboard",
             "ports": [
                 "3000:80"
@@ -111,7 +111,7 @@
             "restart": "unless-stopped"
         },
         "agent": {
-            "image": "YOUR_DOCKERHUB_USERNAME/sentinel-agent:latest",
+            "image": "trinnode/sentinel-agent:latest",
             "container_name": "sentinel-agent",
             "environment": {
                 "AGENT_ID": "${AGENT_ID}",

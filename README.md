@@ -5,8 +5,22 @@
 [![React](https://img.shields.io/badge/React-18-blue.svg)](https://reactjs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)](https://postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://docker.com/)
+[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-trinnode-blue.svg)](https://hub.docker.com/u/trinnode)
 
 **Sentinel** is a sophisticated, enterprise-grade decentralized monitoring system designed specifically for blockchain validators. It moves beyond simple reactive alerts by implementing a peer-to-peer consensus mechanism to eliminate false positives and ensure reliable failure detection.
+
+## 📦 Docker Images
+
+All Sentinel components are available on Docker Hub:
+
+- **Backend API**: [`trinnode/sentinel-backend`](https://hub.docker.com/r/trinnode/sentinel-backend)
+- **Dashboard UI**: [`trinnode/sentinel-dashboard`](https://hub.docker.com/r/trinnode/sentinel-dashboard)
+- **Monitoring Agent**: [`trinnode/sentinel-agent`](https://hub.docker.com/r/trinnode/sentinel-agent)
+
+Deploy with a single command:
+```bash
+docker compose up -d
+```
 
 ## 🌟 Key Features
 
@@ -108,7 +122,14 @@ Password: password
 
 ### Option 1: Docker Compose (Recommended for Production)
 
+Use the pre-built images from Docker Hub:
+
 ```bash
+# Pull latest images
+docker pull trinnode/sentinel-backend:latest
+docker pull trinnode/sentinel-dashboard:latest
+docker pull trinnode/sentinel-agent:latest
+
 # Full deployment
 ./deploy.sh deploy
 

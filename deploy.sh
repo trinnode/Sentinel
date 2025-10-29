@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-COMPOSE_FILE="$SCRIPT_DIR/packages/sentinel-backend/docker-compose.yml"
+COMPOSE_FILE="$SCRIPT_DIR/docker-compose.yml"
 BACKEND_DIR="$SCRIPT_DIR/packages/sentinel-backend"
 DASHBOARD_DIR="$SCRIPT_DIR/packages/sentinel-dashboard"
 AGENT_DIR="$SCRIPT_DIR/packages/sentinel-agent"
@@ -154,7 +154,7 @@ start_services() {
 start_services_docker() {
     log_info "Starting services via Docker Compose..."
 
-    cd "$BACKEND_DIR"
+    cd "$SCRIPT_DIR"
 
     # Use docker compose or docker-compose based on availability
     if docker compose version &> /dev/null; then
@@ -163,7 +163,7 @@ start_services_docker() {
         DOCKER_COMPOSE_CMD="docker-compose"
     fi
 
-    $DOCKER_COMPOSE_CMD -f "$COMPOSE_FILE" up -d
+    $DOCKER_COMPOSE_CMD -f "$COMPOSE_FILE" up -d --build
 
     log_info "Waiting for services to be healthy..."
 
@@ -230,7 +230,7 @@ stop_services() {
     log_info "Stopping Sentinel services..."
 
     if [ "$DOCKER_AVAILABLE" = true ]; then
-        cd "$BACKEND_DIR"
+        cd "$SCRIPT_DIR"
 
         if docker compose version &> /dev/null; then
             docker compose -f "$COMPOSE_FILE" down
@@ -262,7 +262,7 @@ show_status() {
     echo
 
     if [ "$DOCKER_AVAILABLE" = true ]; then
-        cd "$BACKEND_DIR"
+        cd "$SCRIPT_DIR"
 
         if docker compose version &> /dev/null; then
             docker compose -f "$COMPOSE_FILE" ps
@@ -393,7 +393,7 @@ main() {
             ;;
 
         "logs")
-            cd "$BACKEND_DIR"
+            cd "$SCRIPT_DIR"
             if docker compose version &> /dev/null; then
                 docker compose -f "$COMPOSE_FILE" logs -f
             else

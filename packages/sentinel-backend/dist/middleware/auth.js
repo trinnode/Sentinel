@@ -11,13 +11,13 @@ const authMiddleware = async (req, res, next) => {
         let token;
         // Check for token in header
         if (req.headers.authorization &&
-            req.headers.authorization.startsWith('Bearer')) {
-            token = req.headers.authorization.split(' ')[1];
+            req.headers.authorization.startsWith("Bearer")) {
+            token = req.headers.authorization.split(" ")[1];
         }
         if (!token) {
             return res.status(401).json({
                 success: false,
-                error: 'Access denied. No token provided.'
+                error: "Access denied. No token provided.",
             });
         }
         try {
@@ -25,12 +25,12 @@ const authMiddleware = async (req, res, next) => {
             const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
             // Check if user still exists
             const user = await app_1.prisma.user.findUnique({
-                where: { id: decoded.id }
+                where: { id: decoded.id },
             });
             if (!user) {
                 return res.status(401).json({
                     success: false,
-                    error: 'Token is valid but user no longer exists.'
+                    error: "Token is valid but user no longer exists.",
                 });
             }
             // Add user to request object
@@ -40,15 +40,15 @@ const authMiddleware = async (req, res, next) => {
         catch (error) {
             return res.status(401).json({
                 success: false,
-                error: 'Token is not valid.'
+                error: "Token is not valid.",
             });
         }
     }
     catch (error) {
-        console.error('Auth middleware error:', error);
+        console.error("Auth middleware error:", error);
         res.status(500).json({
             success: false,
-            error: 'Server error in authentication'
+            error: "Server error in authentication",
         });
     }
 };

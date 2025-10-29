@@ -1,4 +1,4 @@
-import { WebSocketServer } from 'ws';
+import { WebSocketServer } from "ws";
 export interface WebSocketMessage {
     type: string;
     data: any;

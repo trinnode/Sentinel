@@ -307,6 +307,16 @@ Before you begin, ensure you have:
   - [PostgreSQL Downloads](https://www.postgresql.org/download/)
 - **Git** for cloning the repository
 
+### Docker Images
+
+Sentinel is available on Docker Hub for easy deployment:
+
+- **Backend**: [`trinnode/sentinel-backend`](https://hub.docker.com/r/trinnode/sentinel-backend)
+- **Dashboard**: [`trinnode/sentinel-dashboard`](https://hub.docker.com/r/trinnode/sentinel-dashboard)  
+- **Agent**: [`trinnode/sentinel-agent`](https://hub.docker.com/r/trinnode/sentinel-agent)
+
+All images are tagged with both `latest` and version numbers (e.g., `v1.0.0`).
+
 ### One-Command Deployment (Recommended)
 
 The fastest way to get Sentinel running:
